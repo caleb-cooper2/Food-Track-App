@@ -1,98 +1,250 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  CameraType,
+  CameraView,
+  useCameraPermissions,
+} from "expo-camera";
+import * as ImagePicker from "expo-image-picker";
+import { Image } from "expo-image";
+import { useCallback, useRef, useState } from "react";
+import {
+  Button,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import Feather from "@expo/vector-icons/Feather";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+export default function App() {
+  const [permission, requestPermission] = useCameraPermissions();
+  const ref = useRef<CameraView>(null);
+  const [capturedUri, setCapturedUri] = useState<string | null>(null);
+  const [facing, setFacing] = useState<CameraType>("back");
+  const [isCapturing, setIsCapturing] = useState(false);
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
+  const takePicture = useCallback(async () => {
+    if (isCapturing) return;
+    setIsCapturing(true);
+    try {
+      const photo = await ref.current?.takePictureAsync({
+        quality: 0.92, // preserve EXIF focal length accuracy
+        exif: true,
+      });
+      if (photo?.uri) setCapturedUri(photo.uri);
+    } finally {
+      setIsCapturing(false);
+    }
+  }, [isCapturing]);
+
+  const pickFromLibrary = useCallback(async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: 0.92,
+      exif: true,
+    });
+    if (!result.canceled && result.assets.length > 0) {
+      setCapturedUri(result.assets[0].uri);
+    }
+  }, []);
+
+  const retake = useCallback(() => setCapturedUri(null), []);
+
+  const toggleFacing = useCallback(() => {
+    setFacing((prev) => (prev === "back" ? "front" : "back"));
+  }, []);
+
+  if (!permission) return null;
+
+  if (!permission.granted) {
     return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
+        <View style={styles.permissionContainer}>
+          <Text style={styles.permissionText}>
+            Camera access is needed to estimate food volume.
+          </Text>
+          <Button onPress={requestPermission} title="Grant permission" />
+        </View>
     );
   }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+      <View style={styles.root}>
+        <CameraView
+            style={StyleSheet.absoluteFill}
+            ref={ref}
+            mode="picture"
+            facing={facing}
+            responsiveOrientationWhenOrientationLocked
+        />
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+        {!capturedUri && (
+            <>
+              <View style={styles.hintBanner} pointerEvents="none">
+                <Text style={styles.hintText}>Hold ~30 cm above the plate</Text>
+              </View>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+              <View style={styles.shutterBar}>
+                <Pressable onPress={pickFromLibrary} style={styles.sideButton} hitSlop={12}>
+                  <Feather name="image" size={28} color="white" />
+                </Pressable>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+                <Pressable
+                    onPress={takePicture}
+                    disabled={isCapturing}
+                    style={({ pressed }) => [
+                      styles.shutterBtn,
+                      pressed && styles.shutterBtnPressed,
+                    ]}
+                >
+                  <View
+                      style={[
+                        styles.shutterBtnInner,
+                        isCapturing && styles.shutterBtnCapturing,
+                      ]}
+                  />
+                </Pressable>
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+                <Pressable onPress={toggleFacing} style={styles.sideButton} hitSlop={12}>
+                  <FontAwesome6 name="rotate-left" size={28} color="white" />
+                </Pressable>
+              </View>
+            </>
+        )}
+
+        {capturedUri && (
+            <View style={StyleSheet.absoluteFill}>
+              <Image
+                  source={{ uri: capturedUri }}
+                  style={StyleSheet.absoluteFill}
+                  contentFit="cover"
+                  transition={120}
+              />
+
+              <View style={styles.previewBar}>
+                <Pressable onPress={retake} style={styles.previewAction}>
+                  <AntDesign name="reload" size={22} color="white" />
+                  <Text style={styles.previewActionLabel}>Retake</Text>
+                </Pressable>
+
+                <Pressable
+                    onPress={() => console.log("Analyse:", capturedUri)}
+                    style={[styles.previewAction, styles.previewActionPrimary]}
+                >
+                  <Feather name="zap" size={22} color="white" />
+                  <Text style={styles.previewActionLabel}>Analyse</Text>
+                </Pressable>
+              </View>
+            </View>
+        )}
+      </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    backgroundColor: "#000",
   },
-  safeArea: {
+  permissionContainer: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    gap: 16,
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
+  permissionText: {
+    textAlign: "center",
+    fontSize: 16,
+    color: "#333",
+  },
+
+  // Distance hint
+  hintBanner: {
+    position: "absolute",
+    top: 60,
+    alignSelf: "center",
+    backgroundColor: "rgba(0,0,0,0.45)",
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  hintText: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 13,
+    letterSpacing: 0.2,
+  },
+
+  // Shutter bar
+  shutterBar: {
+    position: "absolute",
+    bottom: 48,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 40,
+  },
+  sideButton: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  shutterBtn: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 4,
+    borderColor: "white",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  shutterBtnPressed: {
+    opacity: 0.6,
+  },
+  shutterBtnInner: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "white",
+  },
+  shutterBtnCapturing: {
+    backgroundColor: "rgba(255,255,255,0.4)",
+  },
+
+  // Preview action bar
+  previewBar: {
+    position: "absolute",
+    bottom: 48,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 20,
+    paddingHorizontal: 32,
+  },
+  previewAction: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 16,
+    borderRadius: 14,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
   },
-  title: {
-    textAlign: 'center',
+  previewActionPrimary: {
+    backgroundColor: "rgba(255,255,255,0.18)",
   },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  previewActionLabel: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+    letterSpacing: 0.3,
   },
 });

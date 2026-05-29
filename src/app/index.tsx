@@ -32,6 +32,7 @@ export default function App() {
     setIsCapturing(true);
     try {
       const photo = await ref.current?.takePictureAsync({
+        skipProcessing: true,
         quality: 0.92, // preserve EXIF focal length accuracy
         exif: true,
       });

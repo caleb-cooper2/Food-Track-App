@@ -10,7 +10,7 @@ export interface VolumeEstimateResponse {
     mean_food_height_cm: number;
     plate_depth_m: number;
     scale_correction_factor: number;
-    intrinsics_source: "exif" | "default";
+    intrinsics_source: "exif" | "error";
     debug_overlay_b64: string | null;
 }
 

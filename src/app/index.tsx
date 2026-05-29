@@ -7,6 +7,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
 import { useCallback, useRef, useState } from "react";
 import {
+  Alert,
   Button,
   Pressable,
   StyleSheet,
@@ -16,6 +17,7 @@ import {
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Feather from "@expo/vector-icons/Feather";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import { estimateFoodVolume, VolumeEstimateResponse } from "@/services/volumeEstimation";
 
 export default function App() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -23,6 +25,7 @@ export default function App() {
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
   const [facing, setFacing] = useState<CameraType>("back");
   const [isCapturing, setIsCapturing] = useState(false);
+  const [result, setResult] = useState<VolumeEstimateResponse | null>(null);
 
   const takePicture = useCallback(async () => {
     if (isCapturing) return;
@@ -49,6 +52,21 @@ export default function App() {
       setCapturedUri(result.assets[0].uri);
     }
   }, []);
+
+  const handleVolumeEstimation = async () => {
+    if (!capturedUri) return;
+
+    setResult(null);
+
+    const response = await estimateFoodVolume(capturedUri);
+
+    if (!response.success) {
+      Alert.alert("Volume estimation failed", response.error);
+      return;
+    }
+
+    setResult(response.data);
+  }
 
   const retake = useCallback(() => setCapturedUri(null), []);
 
@@ -129,7 +147,7 @@ export default function App() {
                 </Pressable>
 
                 <Pressable
-                    onPress={() => console.log("Analyse:", capturedUri)}
+                    onPress={handleVolumeEstimation}
                     style={[styles.previewAction, styles.previewActionPrimary]}
                 >
                   <Feather name="zap" size={22} color="white" />

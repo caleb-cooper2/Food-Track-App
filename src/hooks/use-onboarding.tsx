@@ -5,10 +5,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {createContext, type PropsWithChildren, useCallback, useContext, useEffect, useState} from 'react';
 
 const ONBOARDING_STORAGE_KEY = 'onboarding-completed-1'; // number just in case onboarding needs updated and re-viewed by users
+const PARTICIPANT_CODE_STORAGE_KEY = 'participant_code';
 
 type OnboardingContextValue = {
   isComplete: boolean;
-  completeOnboarding: () => void;
+  completeOnboarding: (participantCode: string) => void;
 };
 
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
@@ -22,9 +23,10 @@ export function OnboardingProvider({ children }: PropsWithChildren) {
     });
   }, []);
 
-  const completeOnboarding = useCallback(() => {
+  const completeOnboarding = useCallback((participantCode: string) => {
     setIsComplete(true);
     AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
+    AsyncStorage.setItem(PARTICIPANT_CODE_STORAGE_KEY, participantCode);
   }, []);
 
   // Wait for the persisted value before mounting any routes

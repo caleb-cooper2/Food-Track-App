@@ -4,14 +4,16 @@ import {Spacing} from '@/constants/theme';
 
 type OnboardingFooterButtonProps = {
   label: string;
+  disabled: boolean;
   onPress: () => void;
 };
 
-export function OnboardingFooterButton({ label, onPress }: OnboardingFooterButtonProps) {
+export function OnboardingFooterButton({ label, disabled, onPress }: OnboardingFooterButtonProps) {
   return (
       <Pressable
+          disabled={disabled}
           onPress={onPress}
-          style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.button, disabled && styles.buttonDisabled, pressed && styles.pressed]}
       >
         <Text style={styles.label}>{label}</Text>
       </Pressable>
@@ -24,6 +26,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: Spacing.three,
     alignItems: 'center'
+  },
+  buttonDisabled: {
+    backgroundColor: '#2C2C2E',
+    opacity: 0.6
   },
   pressed: {
     opacity: 0.85

@@ -13,6 +13,7 @@ import {Warning} from '@/components/onboarding/warning';
 import {Spacing} from '@/constants/theme';
 import {useOnboarding} from '@/hooks/use-onboarding';
 import {useTheme} from '@/hooks/use-theme';
+import {ParticipantCodeInput} from "@/components/onboarding/participant-code-input";
 
 const PAGES = [
     {
@@ -41,6 +42,10 @@ const PAGES = [
         title: 'More detail is better',
         subtitle: 'Better descriptions = better estimates. Mention ingredients, sauces, oils and cooking method where possible.',
         quote: 'Grilled chicken breast, olive oil with a side of steamed broccoli and white rice'
+    },
+    {
+        title: 'Participant code',
+        subtitle: 'Enter your participant code exactly as provided by the lead researcher.'
     }
 ];
 
@@ -48,6 +53,8 @@ export default function OnboardingScreen() {
     const { completeOnboarding } = useOnboarding();
     const theme = useTheme();
     const [currentPage, setCurrentPage] = useState(0);
+    const [participantCode, setParticipantCode] = useState('');
+    const codeValid = /^P\d{3}$/.test(participantCode.trim());
     const isLastPage = currentPage === PAGES.length - 1;
 
     return (
@@ -56,7 +63,7 @@ export default function OnboardingScreen() {
                 showPagination={false}
                 currentPage={currentPage}
                 pageIndexCallback={setCurrentPage}
-                onDone={completeOnboarding}
+                onDone={() => completeOnboarding(participantCode)}
                 titleStyles={{ display: 'none' }}
                 subTitleStyles={{ display: 'none' }}
                 pages={PAGES.map((page, index) => ({
@@ -70,6 +77,7 @@ export default function OnboardingScreen() {
                             {page.image ? <OnboardingImage source={page.image} /> : null}
                             {page.tips && <Checklist items={page.tips} />}
                             {page.quote && <QuoteCard>{page.quote}</QuoteCard>}
+                            {index === PAGES.length-1 && <ParticipantCodeInput value={participantCode} onChangeText={setParticipantCode}/>}
                         </OnboardingPage>
                     )
                 }))}
@@ -78,8 +86,9 @@ export default function OnboardingScreen() {
             <View style={styles.footer}>
                 <OnboardingDots count={PAGES.length} activeIndex={currentPage} />
                 <OnboardingFooterButton
+                    disabled={isLastPage && !codeValid}
                     label={isLastPage ? 'Get started' : 'Next'}
-                    onPress={() => (isLastPage ? completeOnboarding() : setCurrentPage((page) => page + 1))}
+                    onPress={() => (isLastPage ? completeOnboarding(participantCode) : setCurrentPage((page) => page + 1))}
                 />
             </View>
         </View>

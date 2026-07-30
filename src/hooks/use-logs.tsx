@@ -9,6 +9,7 @@ const LOGS_STORAGE_KEY = 'food-logs';
 type LogsContextValue = {
     logs: Log[];
     addLog: (log: Log) => void;
+    removeLog: (id: string) => void;
 };
 
 const LogsContext = createContext<LogsContextValue | null>(null);
@@ -34,7 +35,15 @@ export function LogsProvider({ children }: PropsWithChildren) {
         });
     }, []);
 
-    const value = useMemo(() => ({ logs: logs ?? [], addLog }), [logs, addLog]);
+    const removeLog = useCallback((id: string) => {
+        setLogs((prev) => {
+            const next = (prev ?? []).filter((entry) => entry.id !== id);
+            AsyncStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(next));
+            return next;
+        });
+    }, []);
+
+    const value = useMemo(() => ({ logs: logs ?? [], addLog, removeLog }), [logs, addLog, removeLog]);
 
     // Wait for the persisted value before mounting any routes that read logs
     if (logs === null) return null;

@@ -1,5 +1,5 @@
 import {router, useLocalSearchParams} from 'expo-router';
-import {Pressable, ScrollView, StyleSheet, View} from 'react-native';
+import {Alert, Pressable, ScrollView, StyleSheet, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {LogPhoto} from '@/components/log-detail/log-photo';
@@ -16,7 +16,7 @@ export default function LogDetailScreen() {
     const {id} = useLocalSearchParams<{ id: string }>();
     const theme = useTheme();
     const insets = useSafeAreaInsets();
-    const {logs} = useLogs();
+    const {logs, removeLog} = useLogs();
 
     const log = logs.find((entry) => entry.id === id);
 
@@ -32,6 +32,20 @@ export default function LogDetailScreen() {
     }
 
     const nutrients = log.nutrients;
+
+    const handleDelete = () => {
+        Alert.alert('Delete log', 'This can\'t be undone.', [
+            {text: 'Cancel', style: 'cancel'},
+            {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: () => {
+                    removeLog(log.id);
+                    router.back();
+                }
+            }
+        ]);
+    };
 
     return (
         <ThemedView style={[styles.root, {paddingTop: insets.top + Spacing.three}]}>
@@ -73,7 +87,7 @@ export default function LogDetailScreen() {
                 )}
             </ScrollView>
 
-            <Pressable style={[styles.deleteButton, {backgroundColor: theme.backgroundElement}]} hitSlop={12}>
+            <Pressable onPress={handleDelete} style={[styles.deleteButton, {backgroundColor: theme.backgroundElement}]} hitSlop={12}>
                 <ThemedText style={styles.deleteLabel}>Delete log</ThemedText>
             </Pressable>
         </ThemedView>

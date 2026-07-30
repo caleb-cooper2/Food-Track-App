@@ -1,28 +1,54 @@
 import Feather from '@expo/vector-icons/Feather';
 import {router} from 'expo-router';
-import {Pressable, StyleSheet, View} from 'react-native';
+import {Pressable, SectionList, StyleSheet, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
+import {LogRow} from '@/components/logs/log-row';
 import {ThemedText} from '@/components/themed-text';
 import {ThemedView} from '@/components/themed-view';
 import {Spacing} from '@/constants/theme';
+import {useLogs} from '@/hooks/use-logs';
 import {useTheme} from '@/hooks/use-theme';
+import {groupLogsByDay} from '@/utils/format-log-date';
 
 export default function HomeScreen() {
     const theme = useTheme();
     const insets = useSafeAreaInsets();
+    const {logs} = useLogs();
+
+    const sortedLogs = [...logs].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    const sections = groupLogsByDay(sortedLogs).map((group) => ({title: group.label, data: group.logs}));
 
     return (
         <ThemedView style={[styles.root, {paddingTop: insets.top + Spacing.three}]}>
             <ThemedText type="subtitle">Logs</ThemedText>
 
-            <View style={[styles.emptyState, {borderColor: theme.backgroundSelected}]}>
-                <ThemedText themeColor="textSecondary">No logs yet</ThemedText>
-            </View>
+            {sections.length === 0 ? (
+                <>
+                    <View style={[styles.emptyState, {borderColor: theme.backgroundSelected}]}>
+                        <ThemedText themeColor="textSecondary">No logs yet</ThemedText>
+                    </View>
 
-            <ThemedText themeColor="textSecondary" style={styles.emptyHint}>
-                Log your first meal to see volume and nutrition estimates here.
-            </ThemedText>
+                    <ThemedText themeColor="textSecondary" style={styles.emptyHint}>
+                        Log your first meal to see volume and nutrition estimates here.
+                    </ThemedText>
+                </>
+            ) : (
+                <SectionList
+                    sections={sections}
+                    keyExtractor={(log: Log) => log.id}
+                    renderItem={({item}) => <LogRow log={item} />}
+                    renderSectionHeader={({section: {title}}) => (
+                        <ThemedText type="small" themeColor="textSecondary" style={styles.sectionHeader}>
+                            {title}
+                        </ThemedText>
+                    )}
+                    ItemSeparatorComponent={() => <View style={[styles.separator, {backgroundColor: theme.backgroundSelected}]} />}
+                    stickySectionHeadersEnabled={false}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{paddingBottom: insets.bottom + Spacing.six}}
+                />
+            )}
 
             <Pressable
                 onPress={() => router.push('/new-log')}
@@ -52,6 +78,15 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontSize: 14,
         lineHeight: 20
+    },
+    sectionHeader: {
+        letterSpacing: 0.5,
+        fontWeight: '700',
+        paddingTop: Spacing.three,
+        paddingBottom: Spacing.one
+    },
+    separator: {
+        height: StyleSheet.hairlineWidth
     },
     fab: {
         position: 'absolute',

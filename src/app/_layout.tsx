@@ -2,6 +2,7 @@ import {DarkTheme, DefaultTheme, Stack, ThemeProvider} from 'expo-router';
 import {useColorScheme} from 'react-native';
 
 import {AnimatedSplashOverlay} from '@/components/animated-icon';
+import {LogsProvider} from '@/hooks/use-logs';
 import {OnboardingProvider, useOnboarding} from '@/hooks/use-onboarding';
 
 export default function RootLayout() {
@@ -10,7 +11,9 @@ export default function RootLayout() {
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <AnimatedSplashOverlay />
             <OnboardingProvider>
-                <RootNavigator />
+                <LogsProvider>
+                    <RootNavigator />
+                </LogsProvider>
             </OnboardingProvider>
         </ThemeProvider>
     );

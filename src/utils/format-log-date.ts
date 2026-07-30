@@ -22,7 +22,13 @@ export function formatTime12h(date: Date): string {
     return `${hours}:${minutes} ${period}`;
 }
 
-export interface LogGroup {
+export function formatLogTimestamp(date: Date, now: Date = new Date()): string {
+    const label = dayLabel(date, now);
+    const day = label === 'TODAY' ? 'Today' : label === 'YESTERDAY' ? 'Yesterday' : label;
+    return `${day}, ${formatTime12h(date)}`;
+}
+
+interface LogGroup {
     label: string;
     logs: Log[];
 }

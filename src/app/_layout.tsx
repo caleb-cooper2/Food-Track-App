@@ -31,6 +31,7 @@ function RootNavigator() {
             <Stack.Protected guard={isComplete}>
                 <Stack.Screen name="index" />
                 <Stack.Screen name="new-log" options={{presentation: 'fullScreenModal', animation: 'slide_from_bottom'}} />
+                <Stack.Screen name="log/[id]" options={{animation: 'slide_from_right'}} />
             </Stack.Protected>
         </Stack>
     );

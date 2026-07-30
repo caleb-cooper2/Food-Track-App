@@ -1,4 +1,5 @@
-import {StyleSheet, View} from 'react-native';
+import {router} from 'expo-router';
+import {Pressable, StyleSheet, View} from 'react-native';
 
 import {LogIcon} from '@/components/logs/log-icon';
 import {StatusBadge} from '@/components/logs/status-badge';
@@ -12,7 +13,10 @@ type LogRowProps = {
 
 export function LogRow({ log }: LogRowProps) {
     return (
-        <View style={styles.root}>
+        <Pressable
+            onPress={() => router.push(`/log/${log.id}`)}
+            style={({pressed}) => [styles.root, pressed && styles.pressed]}
+        >
             <LogIcon description={log.description} />
 
             <View style={styles.details}>
@@ -25,7 +29,7 @@ export function LogRow({ log }: LogRowProps) {
             </View>
 
             <StatusBadge log={log} />
-        </View>
+        </Pressable>
     );
 }
 
@@ -35,6 +39,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: Spacing.three,
         paddingVertical: Spacing.three
+    },
+    pressed: {
+        opacity: 0.6
     },
     details: {
         flex: 1,

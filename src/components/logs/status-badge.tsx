@@ -22,7 +22,7 @@ const STYLES = {
 export function StatusBadge({ log }: StatusBadgeProps) {
     const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
     const { background, text } = STYLES[scheme][log.status];
-    const label = log.status === 'success' ? `${log.kcal} kcal` : 'Failed';
+    const label = log.status === 'success' ? (log.kcal != null ? `${log.kcal} kcal` : '—') : 'Failed';
 
     return (
         <View style={[styles.badge, { backgroundColor: background }]}>

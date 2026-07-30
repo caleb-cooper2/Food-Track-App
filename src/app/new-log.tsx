@@ -4,15 +4,21 @@ import {useCallback, useEffect, useState} from 'react';
 import {CaptureStep} from '@/components/new-log/capture-step';
 import {DescribeStep} from '@/components/new-log/describe-step';
 import {ProcessingStep} from '@/components/new-log/processing-step';
+import {useLogs} from '@/hooks/use-logs';
 
 type Step = 'capture' | 'describe' | 'processing';
 
 const PROCESSING_DELAY_MS = 2500;
 
+function generateId(): string {
+    return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export default function NewLogScreen() {
     const [step, setStep] = useState<Step>('capture');
     const [capturedUri, setCapturedUri] = useState<string | null>(null);
     const [description, setDescription] = useState('');
+    const {addLog} = useLogs();
 
     const handleCaptured = useCallback((uri: string) => {
         setCapturedUri(uri);
@@ -25,8 +31,18 @@ export default function NewLogScreen() {
     }, []);
 
     const handleSubmit = useCallback(() => {
+        // Not wired up to the volume/NLP endpoint yet, so nutrients stay null for now
+        addLog({
+            id: generateId(),
+            description,
+            createdAt: new Date().toISOString(),
+            imageUri: capturedUri,
+            status: 'failed',
+            kcal: null,
+            nutrients: null
+        });
         setStep('processing');
-    }, []);
+    }, [addLog, capturedUri, description]);
 
     useEffect(() => {
         if (step !== 'processing' || !capturedUri) return;

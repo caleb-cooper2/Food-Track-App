@@ -1,9 +1,10 @@
 /**
- * Holds the list of meal logs shown on the home screen. Uses mock data for now
+ * Holds the list of meal logs shown on the home screen, persisted across launches via AsyncStorage
  */
-import {createContext, type PropsWithChildren, useCallback, useContext, useMemo, useState} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {createContext, type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState} from 'react';
 
-import {MOCK_LOGS} from '@/data/mock-logs';
+const LOGS_STORAGE_KEY = 'food-logs';
 
 type LogsContextValue = {
     logs: Log[];
@@ -13,13 +14,30 @@ type LogsContextValue = {
 const LogsContext = createContext<LogsContextValue | null>(null);
 
 export function LogsProvider({ children }: PropsWithChildren) {
-    const [logs, setLogs] = useState<Log[]>(MOCK_LOGS);
+    const [logs, setLogs] = useState<Log[] | null>(null);
 
-    const addLog = useCallback((log: Log) => {
-        setLogs((prev) => [log, ...prev]);
+    useEffect(() => {
+        AsyncStorage.getItem(LOGS_STORAGE_KEY).then((stored) => {
+            if (stored) {
+                setLogs(JSON.parse(stored));
+            } else {
+                setLogs(new Array<Log>());
+            }
+        });
     }, []);
 
-    const value = useMemo(() => ({ logs, addLog }), [logs, addLog]);
+    const addLog = useCallback((log: Log) => {
+        setLogs((prev) => {
+            const next = [log, ...(prev ?? [])];
+            AsyncStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(next));
+            return next;
+        });
+    }, []);
+
+    const value = useMemo(() => ({ logs: logs ?? [], addLog }), [logs, addLog]);
+
+    // Wait for the persisted value before mounting any routes that read logs
+    if (logs === null) return null;
 
     return <LogsContext.Provider value={value}>{children}</LogsContext.Provider>;
 }

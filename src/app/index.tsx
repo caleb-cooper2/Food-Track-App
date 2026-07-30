@@ -1,4 +1,5 @@
 import Feather from '@expo/vector-icons/Feather';
+import {router} from 'expo-router';
 import {Pressable, StyleSheet, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
@@ -24,6 +25,7 @@ export default function HomeScreen() {
             </ThemedText>
 
             <Pressable
+                onPress={() => router.push('/new-log')}
                 style={({pressed}) => [styles.fab, {backgroundColor: theme.text}, pressed && styles.fabPressed]}
                 hitSlop={12}
             >

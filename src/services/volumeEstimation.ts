@@ -1,3 +1,4 @@
+import NetInfo from '@react-native-community/netinfo';
 import { fetch } from 'expo/fetch';
 import { File } from 'expo-file-system';
 
@@ -38,10 +39,20 @@ export interface VolumeEstimateResponse {
     diagnostics: VolumeEstimateDiagnostics;
 }
 
-export type VolumeEstimateResult = { success: true; data: VolumeEstimateResponse } | { success: false; error: string };
+export type VolumeEstimateErrorKind = "timeout" | "network" | "server" | "unknown";
+
+export type VolumeEstimateResult =
+    | { success: true; data: VolumeEstimateResponse }
+    | { success: false; kind: VolumeEstimateErrorKind; error: string };
 
 const VOLUME_ENDPOINT = `${process.env.EXPO_PUBLIC_API_URL}/api/v1/estimate-volume`;
-const REQUEST_TIMEOUT_MS = 60_000; // 60 secs
+const REQUEST_TIMEOUT_MS = 120_000; // 120 secs
+
+// In case NetInfo misses something
+function isNetworkError(err: unknown): boolean {
+    if (!(err instanceof TypeError)) return false;
+    return /network request failed|failed to fetch|network error/i.test(err.message);
+}
 
 export type ScaleRef = "utensil" | "size_prior" | "checkerboard" | "auto";
 
@@ -50,6 +61,11 @@ export async function estimateFoodVolume(
     description: string,
     scaleRef: ScaleRef = "size_prior"
 ): Promise<VolumeEstimateResult> {
+    const netState = await NetInfo.fetch();
+    if (netState.isConnected === false || netState.isInternetReachable === false) {
+        return { success: false, kind: "network", error: "No internet connection detected" };
+    }
+
     const file = new File(imageUri);
 
     const formData = new FormData();
@@ -71,7 +87,7 @@ export async function estimateFoodVolume(
 
         if (!response.ok) {
             const errorBody = await response.text();
-            return { success: false, error: `Server error ${response.status}: ${errorBody}` };
+            return { success: false, kind: "server", error: `Server error ${response.status}: ${errorBody}` };
         }
 
         const data: VolumeEstimateResponse = await response.json();
@@ -80,11 +96,16 @@ export async function estimateFoodVolume(
         clearTimeout(timeoutId);
 
         if (err instanceof Error && err.name === "AbortError") {
-            return { success: false, error: "Request timed out after 60s" };
+            return { success: false, kind: "timeout", error: `Request timed out after ${REQUEST_TIMEOUT_MS / 1000}s` };
+        }
+
+        if (isNetworkError(err)) {
+            return { success: false, kind: "network", error: "Could not connect to the server" };
         }
 
         return {
             success: false,
+            kind: "unknown",
             error: err instanceof Error ? err.message : "Unknown network error",
         };
     }

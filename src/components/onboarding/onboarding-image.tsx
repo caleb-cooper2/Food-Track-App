@@ -26,11 +26,12 @@ export function OnboardingImage({ source }: OnboardingImageCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    width: '100%',
+    width: '80%',
     aspectRatio: 0.75,
     borderRadius: 16,
     borderWidth: 1,
-    overflow: 'hidden'
+    overflow: 'hidden',
+    alignSelf: 'center',
   },
   image: {
     width: '100%',

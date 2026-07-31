@@ -1,14 +1,16 @@
 import {router} from 'expo-router';
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useState} from 'react';
+import {Alert} from 'react-native';
 
 import {CaptureStep} from '@/components/new-log/capture-step';
 import {DescribeStep} from '@/components/new-log/describe-step';
 import {ProcessingStep} from '@/components/new-log/processing-step';
 import {useLogs} from '@/hooks/use-logs';
+import {estimateFoodVolume} from '@/services/volumeEstimation';
+import {estimateFailureAlert} from '@/utils/estimate-error-alert';
+import {kcalFromEnergyKj} from '@/utils/nutrition';
 
 type Step = 'capture' | 'describe' | 'processing';
-
-const PROCESSING_DELAY_MS = 2500;
 
 function generateId(): string {
     return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
@@ -30,8 +32,27 @@ export default function NewLogScreen() {
         setStep('capture');
     }, []);
 
-    const handleSubmit = useCallback(() => {
-        // Not wired up to the volume/NLP endpoint yet, so nutrients stay null for now
+    const handleSubmit = useCallback(async () => {
+        if (!capturedUri) return;
+        setStep('processing');
+
+        const result = await estimateFoodVolume(capturedUri, description);
+
+        if (result.success) {
+            const nutrients = result.data.diagnostics.total_nutrients;
+            addLog({
+                id: generateId(),
+                description,
+                createdAt: new Date().toISOString(),
+                imageUri: capturedUri,
+                status: 'success',
+                kcal: kcalFromEnergyKj(nutrients?.energy_kj),
+                nutrients: nutrients ?? null
+            });
+            router.back();
+            return;
+        }
+
         addLog({
             id: generateId(),
             description,
@@ -41,22 +62,10 @@ export default function NewLogScreen() {
             kcal: null,
             nutrients: null
         });
-        setStep('processing');
+
+        const {title, message} = estimateFailureAlert(result.kind);
+        Alert.alert(title, message, [{text: 'OK', onPress: () => router.back()}]);
     }, [addLog, capturedUri, description]);
-
-    useEffect(() => {
-        if (step !== 'processing' || !capturedUri) return;
-
-        let cancelled = false;
-        const timeout = setTimeout(async () => {
-            if (!cancelled) router.back();
-        }, PROCESSING_DELAY_MS);
-
-        return () => {
-            cancelled = true;
-            clearTimeout(timeout);
-        };
-    }, [step, capturedUri]);
 
     if (step === 'capture') {
         return <CaptureStep onCancel={() => router.back()} onCaptured={handleCaptured} />;

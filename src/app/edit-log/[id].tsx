@@ -1,6 +1,6 @@
 import {router, useLocalSearchParams} from 'expo-router';
 import {useCallback, useEffect, useRef, useState} from 'react';
-import {Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View} from 'react-native';
+import {Alert, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {LogPhoto} from '@/components/log-detail/log-photo';
@@ -10,10 +10,11 @@ import {ThemedView} from '@/components/themed-view';
 import {Spacing} from '@/constants/theme';
 import {useLogs} from '@/hooks/use-logs';
 import {useTheme} from '@/hooks/use-theme';
+import {estimateFoodVolume} from '@/services/volumeEstimation';
+import {estimateFailureAlert} from '@/utils/estimate-error-alert';
+import {kcalFromEnergyKj} from '@/utils/nutrition';
 
 type Step = 'describe' | 'processing';
-
-const PROCESSING_DELAY_MS = 2500;
 
 export default function EditLogScreen() {
     const {id} = useLocalSearchParams<{ id: string }>();
@@ -38,28 +39,29 @@ export default function EditLogScreen() {
         return () => subscription.remove();
     }, []);
 
-    useEffect(() => {
-        if (step !== 'processing') return;
-
-        let cancelled = false;
-        const timeout = setTimeout(() => {
-            if (!cancelled) router.back();
-        }, PROCESSING_DELAY_MS);
-
-        return () => {
-            cancelled = true;
-            clearTimeout(timeout);
-        };
-    }, [step]);
-
     const handleCancel = useCallback(() => {
         router.back();
     }, []);
 
-    const handleSave = useCallback(() => {
-        if (!log) return;
+    const handleSave = useCallback(async () => {
+        if (!log || !log.imageUri) return;
+        setStep('processing');
 
-        // Not wired up to the volume/NLP endpoint yet, so nutrients stay null for now
+        const result = await estimateFoodVolume(log.imageUri, description);
+
+        if (result.success) {
+            const nutrients = result.data.diagnostics.total_nutrients;
+            updateLog(log.id, {
+                description,
+                createdAt: new Date().toISOString(),
+                status: 'success',
+                kcal: kcalFromEnergyKj(nutrients?.energy_kj),
+                nutrients: nutrients ?? null
+            });
+            router.back();
+            return;
+        }
+
         updateLog(log.id, {
             description,
             createdAt: new Date().toISOString(),
@@ -67,7 +69,9 @@ export default function EditLogScreen() {
             kcal: null,
             nutrients: null
         });
-        setStep('processing');
+
+        const {title, message} = estimateFailureAlert(result.kind);
+        Alert.alert(title, message, [{text: 'OK', onPress: () => router.back()}]);
     }, [log, description, updateLog]);
 
     if (!log) {

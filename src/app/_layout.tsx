@@ -32,6 +32,7 @@ function RootNavigator() {
                 <Stack.Screen name="index" />
                 <Stack.Screen name="new-log" options={{presentation: 'fullScreenModal', animation: 'slide_from_bottom'}} />
                 <Stack.Screen name="log/[id]" options={{animation: 'slide_from_right'}} />
+                <Stack.Screen name="edit-log/[id]" options={{animation: 'slide_from_right'}} />
             </Stack.Protected>
         </Stack>
     );

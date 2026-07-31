@@ -56,7 +56,7 @@ export default function LogDetailScreen() {
 
                 <ThemedText type="smallBold">Log</ThemedText>
 
-                <Pressable hitSlop={12}>
+                <Pressable onPress={() => router.push(`/edit-log/${log.id}`)} hitSlop={12}>
                     <ThemedText type="smallBold">Edit</ThemedText>
                 </Pressable>
             </View>

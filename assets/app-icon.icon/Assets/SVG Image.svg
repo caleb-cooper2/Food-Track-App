@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Icon Composer layer 9: tapered scan lines -->
+  <!-- 1024x1024, transparent, fills only, no filters -->
+  <!-- Colour swap: change both stop-color values below (#208AEF brand / #4ADE80 success) -->
+
+  <defs>
+    <linearGradient id="beamFade" gradientUnits="userSpaceOnUse"
+                    x1="0" y1="100" x2="0" y2="340"
+                    gradientTransform="translate(605 404) rotate(21)">
+      <stop offset="0"    stop-color="#208AEF" stop-opacity="0.80"/>
+      <stop offset="0.55" stop-color="#208AEF" stop-opacity="0.45"/>
+      <stop offset="1"    stop-color="#208AEF" stop-opacity="0.08"/>
+    </linearGradient>
+  </defs>
+
+  <!-- origin = lens centre of layer 7; +y runs along the beam toward the burger -->
+  <g transform="translate(605 404) rotate(21)" fill="url(#beamFade)">
+    <path d="M -29 100 L -21 100 L -71.4 340 L -98.6 340 Z"/>
+    <path d="M -15 100 L  -7 100 L -23.8 340 L -51.0 340 Z"/>
+    <path d="M   7 100 L  15 100 L  51.0 340 L  23.8 340 Z"/>
+    <path d="M  21 100 L  29 100 L  98.6 340 L  71.4 340 Z"/>
+  </g>
+</svg>

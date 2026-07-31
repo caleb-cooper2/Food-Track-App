@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "volume-estimation",
+    "name": "Food Track",
     "slug": "volume-estimation",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,7 +8,12 @@
     "scheme": "volumeestimation",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/app.icon",
+      "bundleIdentifier": "com.voxtl.volumeestimation",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +22,11 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
@@ -35,11 +44,24 @@
           }
         }
       ],
-      "expo-image"
+      "expo-image",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Volume Estimation uses your camera to capture photos of your meals for logging."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9a13385b-628b-4256-8f83-25715841299d"
+      }
+    },
+    "owner": "caleb_cooper"
   }
 }

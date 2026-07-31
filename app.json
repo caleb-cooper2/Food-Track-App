@@ -8,7 +8,7 @@
     "scheme": "volumeestimation",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/app.icon",
+      "icon": "./assets/app-icon.icon",
       "bundleIdentifier": "com.voxtl.volumeestimation",
       "buildNumber": "1",
       "infoPlist": {
@@ -24,6 +24,8 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ]
@@ -50,7 +52,8 @@
         {
           "cameraPermission": "Volume Estimation uses your camera to capture photos of your meals for logging."
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -62,6 +65,12 @@
         "projectId": "9a13385b-628b-4256-8f83-25715841299d"
       }
     },
-    "owner": "caleb_cooper"
+    "owner": "caleb_cooper",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/9a13385b-628b-4256-8f83-25715841299d"
+    }
   }
 }

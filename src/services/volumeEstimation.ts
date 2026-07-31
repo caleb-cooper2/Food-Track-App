@@ -2,6 +2,8 @@ import NetInfo from '@react-native-community/netinfo';
 import { fetch } from 'expo/fetch';
 import { File } from 'expo-file-system';
 
+import { getParticipantCode } from '@/hooks/use-onboarding';
+
 export interface VolumeEstimateItem {
     prompt: string;
     matched_food: string | null;
@@ -39,7 +41,7 @@ export interface VolumeEstimateResponse {
     diagnostics: VolumeEstimateDiagnostics;
 }
 
-export type VolumeEstimateErrorKind = "timeout" | "network" | "server" | "unknown";
+export type VolumeEstimateErrorKind = "timeout" | "network" | "server" | "config" | "unknown";
 
 export type VolumeEstimateResult =
     | { success: true; data: VolumeEstimateResponse }
@@ -66,10 +68,16 @@ export async function estimateFoodVolume(
         return { success: false, kind: "network", error: "No internet connection detected" };
     }
 
+    const participantCode = await getParticipantCode();
+    if (!participantCode) {
+        return { success: false, kind: "config", error: "No participant code found - please complete onboarding" };
+    }
+
     const file = new File(imageUri);
 
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("participant_code", participantCode);
     formData.append("scale_ref", scaleRef);
     formData.append("text", description);
 

@@ -9,6 +9,7 @@ import {ThemedText} from '@/components/themed-text';
 import {ThemedView} from '@/components/themed-view';
 import {Spacing} from '@/constants/theme';
 import {useLogs} from '@/hooks/use-logs';
+import {useOnboarding} from '@/hooks/use-onboarding';
 import {useTheme} from '@/hooks/use-theme';
 import {estimateFoodVolume} from '@/services/volumeEstimation';
 import {estimateFailureAlert} from '@/utils/estimate-error-alert';
@@ -21,6 +22,7 @@ export default function EditLogScreen() {
     const theme = useTheme();
     const insets = useSafeAreaInsets();
     const {logs, updateLog} = useLogs();
+    const {resetOnboarding} = useOnboarding();
     const scrollRef = useRef<ScrollView>(null);
     const [step, setStep] = useState<Step>('describe');
     const [description, setDescription] = useState('');
@@ -71,8 +73,14 @@ export default function EditLogScreen() {
         });
 
         const {title, message} = estimateFailureAlert(result.kind);
+        if (result.kind === 'config') {
+            resetOnboarding();
+            Alert.alert(title, message);
+            return;
+        }
+
         Alert.alert(title, message, [{text: 'OK', onPress: () => router.back()}]);
-    }, [log, description, updateLog]);
+    }, [log, description, updateLog, resetOnboarding]);
 
     if (!log) {
         return (

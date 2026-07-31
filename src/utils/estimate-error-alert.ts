@@ -17,6 +17,11 @@ export function estimateFailureAlert(kind: VolumeEstimateErrorKind): EstimateFai
                 title: 'No connection',
                 message: 'We couldn\'t reach the server. Check your Wi-Fi or cellular connection, then edit your log to try again later.'
             };
+        case 'config':
+            return {
+                title: 'Participant code missing',
+                message: 'We couldn\'t find your participant code. Please restart the app and complete onboarding again.'
+            };
         default:
             return {
                 title: 'Something went wrong',

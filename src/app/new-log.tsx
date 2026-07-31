@@ -6,6 +6,7 @@ import {CaptureStep} from '@/components/new-log/capture-step';
 import {DescribeStep} from '@/components/new-log/describe-step';
 import {ProcessingStep} from '@/components/new-log/processing-step';
 import {useLogs} from '@/hooks/use-logs';
+import {useOnboarding} from '@/hooks/use-onboarding';
 import {estimateFoodVolume} from '@/services/volumeEstimation';
 import {estimateFailureAlert} from '@/utils/estimate-error-alert';
 import {kcalFromEnergyKj} from '@/utils/nutrition';
@@ -21,6 +22,7 @@ export default function NewLogScreen() {
     const [capturedUri, setCapturedUri] = useState<string | null>(null);
     const [description, setDescription] = useState('');
     const {addLog} = useLogs();
+    const {resetOnboarding} = useOnboarding();
 
     const handleCaptured = useCallback((uri: string) => {
         setCapturedUri(uri);
@@ -64,8 +66,14 @@ export default function NewLogScreen() {
         });
 
         const {title, message} = estimateFailureAlert(result.kind);
+        if (result.kind === 'config') {
+            resetOnboarding();
+            Alert.alert(title, message);
+            return;
+        }
+
         Alert.alert(title, message, [{text: 'OK', onPress: () => router.back()}]);
-    }, [addLog, capturedUri, description]);
+    }, [addLog, capturedUri, description, resetOnboarding]);
 
     if (step === 'capture') {
         return <CaptureStep onCancel={() => router.back()} onCaptured={handleCaptured} />;

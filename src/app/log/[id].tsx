@@ -75,6 +75,12 @@ export default function LogDetailScreen() {
                     </ThemedText>
                 </View>
 
+                {log.confidence == "low" && (
+                    <ThemedText type="small" style={styles.confidenceNote}>
+                        {`Low confidence - the photo angle made the portion size difficult to estimate`}
+                    </ThemedText>
+                )}
+
                 {log.status === 'success' && nutrients ? (
                     <View style={styles.nutrients}>
                         {NUTRIENT_DISPLAY_ORDER
@@ -118,6 +124,9 @@ const styles = StyleSheet.create({
     },
     descriptionBlock: {
         gap: Spacing.one
+    },
+    confidenceNote: {
+        color: '#9A7A4A'
     },
     description: {
         fontWeight: '700'

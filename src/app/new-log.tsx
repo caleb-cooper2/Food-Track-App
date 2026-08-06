@@ -50,7 +50,8 @@ export default function NewLogScreen() {
                 status: 'success',
                 kcal: kcalFromEnergyKj(nutrients?.energy_kj),
                 nutrients: nutrients ?? null,
-                total_mass_g: result.data.mass_g
+                total_mass_g: result.data.mass_g,
+                confidence: result.data.confidence,
             });
             router.back();
             return;
@@ -64,7 +65,8 @@ export default function NewLogScreen() {
             status: 'failed',
             kcal: null,
             nutrients: null,
-            total_mass_g: null
+            total_mass_g: null,
+            confidence: null
         });
 
         const {title, message} = estimateFailureAlert(result.kind);

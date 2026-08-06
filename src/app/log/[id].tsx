@@ -69,7 +69,10 @@ export default function LogDetailScreen() {
 
                 <View style={styles.descriptionBlock}>
                     <ThemedText type="default" style={styles.description}>{log.description}</ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">{formatLogTimestamp(new Date(log.createdAt))}</ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                        {formatLogTimestamp(new Date(log.createdAt))}
+                        {log.total_mass_g != null && ` • ≈ ${Math.round(log.total_mass_g)} g estimated`}
+                    </ThemedText>
                 </View>
 
                 {log.status === 'success' && nutrients ? (

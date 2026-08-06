@@ -49,7 +49,8 @@ export default function NewLogScreen() {
                 imageUri: capturedUri,
                 status: 'success',
                 kcal: kcalFromEnergyKj(nutrients?.energy_kj),
-                nutrients: nutrients ?? null
+                nutrients: nutrients ?? null,
+                total_mass_g: result.data.mass_g
             });
             router.back();
             return;
@@ -62,7 +63,8 @@ export default function NewLogScreen() {
             imageUri: capturedUri,
             status: 'failed',
             kcal: null,
-            nutrients: null
+            nutrients: null,
+            total_mass_g: null
         });
 
         const {title, message} = estimateFailureAlert(result.kind);

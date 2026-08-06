@@ -58,7 +58,8 @@ export default function EditLogScreen() {
                 createdAt: new Date().toISOString(),
                 status: 'success',
                 kcal: kcalFromEnergyKj(nutrients?.energy_kj),
-                nutrients: nutrients ?? null
+                nutrients: nutrients ?? null,
+                total_mass_g: result.data.mass_g
             });
             router.back();
             return;
@@ -69,7 +70,8 @@ export default function EditLogScreen() {
             createdAt: new Date().toISOString(),
             status: 'failed',
             kcal: null,
-            nutrients: null
+            nutrients: null,
+            total_mass_g: null
         });
 
         const {title, message} = estimateFailureAlert(result.kind);

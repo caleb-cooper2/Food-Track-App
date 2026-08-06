@@ -42,8 +42,9 @@ export default function NewLogScreen() {
 
         if (result.success) {
             const nutrients = result.data.diagnostics.total_nutrients;
+            const id = generateId();
             addLog({
-                id: generateId(),
+                id,
                 description,
                 createdAt: new Date().toISOString(),
                 imageUri: capturedUri,
@@ -55,7 +56,7 @@ export default function NewLogScreen() {
                 items_with_nutrients: result.data.diagnostics.items_with_nutrients,
                 items: result.data.diagnostics.items
             });
-            router.back();
+            router.replace(`/log/${id}`);
             return;
         }
 

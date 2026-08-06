@@ -52,6 +52,8 @@ export default function NewLogScreen() {
                 nutrients: nutrients ?? null,
                 total_mass_g: result.data.mass_g,
                 confidence: result.data.confidence,
+                items_with_nutrients: result.data.diagnostics.items_with_nutrients,
+                items: result.data.diagnostics.items
             });
             router.back();
             return;
@@ -66,7 +68,9 @@ export default function NewLogScreen() {
             kcal: null,
             nutrients: null,
             total_mass_g: null,
-            confidence: null
+            confidence: null,
+            items_with_nutrients: null,
+            items: null
         });
 
         const {title, message} = estimateFailureAlert(result.kind);

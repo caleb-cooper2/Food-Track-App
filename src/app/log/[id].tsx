@@ -76,7 +76,7 @@ export default function LogDetailScreen() {
                 </View>
 
                 {log.confidence == "low" && (
-                    <ThemedText type="small" style={styles.confidenceNote}>
+                    <ThemedText type="small" style={styles.warningNote}>
                         {`Low confidence - the photo angle made the portion size difficult to estimate`}
                     </ThemedText>
                 )}
@@ -92,6 +92,12 @@ export default function LogDetailScreen() {
                 ) : (
                     <ThemedText type="small" themeColor="textSecondary">
                         This log failed to process, so no nutrition estimate is available.
+                    </ThemedText>
+                )}
+
+                {log.status === 'success' && nutrients && log.items != null && log.items_with_nutrients != null && log.items.length !== log.items_with_nutrients && (
+                    <ThemedText type="small" style={styles.warningNote}>
+                        {`Only counted ${log.items_with_nutrients} of ${log.items.length} foods - totals may be incorrect`}
                     </ThemedText>
                 )}
             </ScrollView>
@@ -125,7 +131,7 @@ const styles = StyleSheet.create({
     descriptionBlock: {
         gap: Spacing.one
     },
-    confidenceNote: {
+    warningNote: {
         color: '#9A7A4A'
     },
     description: {

@@ -51,11 +51,13 @@ export default function EditLogScreen() {
 
         const result = await estimateFoodVolume(log.imageUri, description);
 
+        const createdAt = description === log.description ? log.createdAt : new Date().toISOString();
+
         if (result.success) {
             const nutrients = result.data.diagnostics.total_nutrients;
             updateLog(log.id, {
                 description,
-                createdAt: new Date().toISOString(),
+                createdAt,
                 status: 'success',
                 kcal: kcalFromEnergyKj(nutrients?.energy_kj),
                 nutrients: nutrients ?? null,
@@ -70,7 +72,7 @@ export default function EditLogScreen() {
 
         updateLog(log.id, {
             description,
-            createdAt: new Date().toISOString(),
+            createdAt,
             status: 'failed',
             kcal: null,
             nutrients: null,

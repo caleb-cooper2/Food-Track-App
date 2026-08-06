@@ -81,7 +81,19 @@ export default function LogDetailScreen() {
                     </ThemedText>
                 )}
 
-                {log.status === 'success' && nutrients ? (
+                {log.status !== 'success' ? ( // Failed to process entirely
+                    <View style={styles.noMatch}>
+                        <ThemedText themeColor="textSecondary" style={styles.noMatchText}>
+                            This log failed to process.
+                        </ThemedText>
+                        <ThemedText themeColor="textSecondary" style={styles.noMatchText}>
+                            <ThemedText type="default" style={styles.noMatchLink} onPress={() => router.push(`/edit-log/${log.id}`)}>
+                                Edit log
+                            </ThemedText>
+                            {' to resubmit for a new estimate.'}
+                        </ThemedText>
+                    </View>
+                ) : nutrients ? ( // Food nutrients found!
                     <View style={styles.nutrients}>
                         {NUTRIENT_DISPLAY_ORDER
                             .filter(({key}) => nutrients[key] != null)
@@ -89,16 +101,43 @@ export default function LogDetailScreen() {
                                 <NutrientBar key={key} label={label} unit={unit} value={nutrients[key]!} referenceValue={referenceValue} />
                             ))}
                     </View>
-                ) : (
-                    <ThemedText type="small" themeColor="textSecondary">
-                        This log failed to process, so no nutrition estimate is available.
-                    </ThemedText>
+                ) : ( // No food matches at all, but pipeline still ran fine
+                    <View style={styles.noMatch}>
+                        <ThemedText themeColor="textSecondary" style={styles.noMatchText}>
+                            We couldn't identify the foods from your description.
+                        </ThemedText>
+                        <ThemedText themeColor="textSecondary" style={styles.noMatchText}>
+                            <ThemedText type="default" style={styles.noMatchLink} onPress={() => router.push(`/edit-log/${log.id}`)}>
+                                Edit log
+                            </ThemedText>
+                            {' and try a different wording.'}
+                        </ThemedText>
+                    </View>
                 )}
 
                 {log.status === 'success' && nutrients && log.items != null && log.items_with_nutrients != null && log.items.length !== log.items_with_nutrients && (
                     <ThemedText type="small" style={styles.warningNote}>
                         {`Only counted ${log.items_with_nutrients} of ${log.items.length} foods - totals may be incorrect`}
                     </ThemedText>
+                )}
+
+                {log.items != null && log.items.length > 0 && (
+                    <View style={styles.itemsBlock}>
+                        <ThemedText themeColor="textSecondary" type="small" style={styles.label}>
+                            RECOGNISED FOODS
+                        </ThemedText>
+
+                        {log.items.map((item, index) => (
+                            <View key={index} style={styles.item}>
+                                <ThemedText>{item.prompt}</ThemedText>
+                                <ThemedText type="small" themeColor="textSecondary">
+                                    {item.matched_food != null
+                                        ? `${item.matched_food}${item.mass_g != null ? ` • ~ ${Math.round(item.mass_g)} g` : ''}`
+                                        : 'no match'}
+                                </ThemedText>
+                            </View>
+                        ))}
+                    </View>
                 )}
             </ScrollView>
 
@@ -139,6 +178,28 @@ const styles = StyleSheet.create({
     },
     nutrients: {
         gap: Spacing.three
+    },
+    label: {
+        letterSpacing: 0.5,
+        marginBottom: -Spacing.two
+    },
+    itemsBlock: {
+        gap: Spacing.three
+    },
+    noMatch: {
+        alignItems: 'center',
+        gap: Spacing.three,
+        paddingVertical: Spacing.five
+    },
+    noMatchText: {
+        textAlign: 'center'
+    },
+    noMatchLink: {
+        fontWeight: '700',
+        textDecorationLine: 'underline'
+    },
+    item: {
+        gap: Spacing.half
     },
     deleteButton: {
         borderRadius: 16,

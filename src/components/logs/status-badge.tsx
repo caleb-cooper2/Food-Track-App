@@ -11,18 +11,20 @@ type StatusBadgeProps = {
 const STYLES = {
     light: {
         success: { background: '#DCF5E3', text: '#1F8A4C' },
-        failed: { background: '#FBDCDC', text: '#C13333' }
+        failed: { background: '#FBDCDC', text: '#C13333' },
+        processing: { background: '#FFF3D6', text: '#A07A00' }
     },
     dark: {
         success: { background: '#173425', text: '#4ADE80' },
-        failed: { background: '#3A1A1A', text: '#F87171' }
+        failed: { background: '#3A1A1A', text: '#F87171' },
+        processing: { background: '#3A2A00', text: '#FBBF24' }
     }
 } as const;
 
 export function StatusBadge({ log }: StatusBadgeProps) {
     const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
     const { background, text } = STYLES[scheme][log.status];
-    const label = log.status === 'success' ? (log.kcal != null ? `${log.kcal} kcal` : '—') : 'Failed';
+    const label = log.status === 'success' ? (log.kcal != null ? `${log.kcal} kcal` : '—') : log.status === 'processing' ? 'Processing' : 'Failed';
 
     return (
         <View style={[styles.badge, { backgroundColor: background }]}>

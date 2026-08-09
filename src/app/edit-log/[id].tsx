@@ -1,19 +1,25 @@
 import {router, useLocalSearchParams} from 'expo-router';
 import {useCallback, useEffect, useRef, useState} from 'react';
-import {Alert, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View} from 'react-native';
+import {
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    View
+} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {LogPhoto} from '@/components/log-detail/log-photo';
-import {ProcessingStep} from '@/components/new-log/processing-step';
 import {ThemedText} from '@/components/themed-text';
 import {ThemedView} from '@/components/themed-view';
 import {Spacing} from '@/constants/theme';
 import {useLogs} from '@/hooks/use-logs';
 import {useOnboarding} from '@/hooks/use-onboarding';
 import {useTheme} from '@/hooks/use-theme';
-import {estimateFoodVolume} from '@/services/volumeEstimation';
-import {estimateFailureAlert} from '@/utils/estimate-error-alert';
-import {kcalFromEnergyKj} from '@/utils/nutrition';
+import {submitLogEstimate} from "@/services/logSubmission";
 
 type Step = 'describe' | 'processing';
 
@@ -45,51 +51,27 @@ export default function EditLogScreen() {
         router.back();
     }, []);
 
-    const handleSave = useCallback(async () => {
+    const handleSave = useCallback(() => {
         if (!log || !log.imageUri) return;
-        setStep('processing');
-
-        const result = await estimateFoodVolume(log.imageUri, description);
 
         const createdAt = description === log.description ? log.createdAt : new Date().toISOString();
-
-        if (result.success) {
-            const nutrients = result.data.diagnostics.total_nutrients;
-            updateLog(log.id, {
-                description,
-                createdAt,
-                status: 'success',
-                kcal: kcalFromEnergyKj(nutrients?.energy_kj),
-                nutrients: nutrients ?? null,
-                total_mass_g: result.data.mass_g,
-                confidence: result.data.confidence,
-                items_with_nutrients: result.data.diagnostics.items_with_nutrients,
-                items: result.data.diagnostics.items
-            });
-            router.back();
-            return;
-        }
 
         updateLog(log.id, {
             description,
             createdAt,
-            status: 'failed',
+            status: 'processing',
             kcal: null,
             nutrients: null,
             total_mass_g: null,
             confidence: null,
             items_with_nutrients: null,
-            items: null
+            items: null,
+            failureKind: null
         });
 
-        const {title, message} = estimateFailureAlert(result.kind);
-        if (result.kind === 'config') {
-            resetOnboarding();
-            Alert.alert(title, message);
-            return;
-        }
+        submitLogEstimate(log.id, log.imageUri, description, updateLog, resetOnboarding);
 
-        Alert.alert(title, message, [{text: 'OK', onPress: () => router.back()}]);
+        router.back();
     }, [log, description, updateLog, resetOnboarding]);
 
     if (!log) {
@@ -101,10 +83,6 @@ export default function EditLogScreen() {
                 </Pressable>
             </ThemedView>
         );
-    }
-
-    if (step === 'processing') {
-        return <ProcessingStep />;
     }
 
     return (

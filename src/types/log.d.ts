@@ -1,4 +1,4 @@
-type LogStatus = 'success' | 'failed';
+type LogStatus = 'success' | 'failed' | 'processing';
 type PossibleConfidence = 'low' | 'medium' | 'high';
 
 interface Log {
@@ -13,4 +13,5 @@ interface Log {
     confidence: PossibleConfidence | null;
     items_with_nutrients: number | null;
     items: import('@/services/volumeEstimation').VolumeEstimateItem[] | null; // import needed inline so that it can still be global
+    failureKind: import('@/services/volumeEstimation').VolumeEstimateErrorKind | null;
 }

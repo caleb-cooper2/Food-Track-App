@@ -1,15 +1,11 @@
 import {router} from 'expo-router';
 import {useCallback, useState} from 'react';
-import {Alert} from 'react-native';
 
 import {CaptureStep} from '@/components/new-log/capture-step';
 import {DescribeStep} from '@/components/new-log/describe-step';
-import {ProcessingStep} from '@/components/new-log/processing-step';
 import {useLogs} from '@/hooks/use-logs';
 import {useOnboarding} from '@/hooks/use-onboarding';
-import {estimateFoodVolume} from '@/services/volumeEstimation';
-import {estimateFailureAlert} from '@/utils/estimate-error-alert';
-import {kcalFromEnergyKj} from '@/utils/nutrition';
+import {submitLogEstimate} from "@/services/logSubmission";
 
 type Step = 'capture' | 'describe' | 'processing';
 
@@ -21,7 +17,7 @@ export default function NewLogScreen() {
     const [step, setStep] = useState<Step>('capture');
     const [capturedUri, setCapturedUri] = useState<string | null>(null);
     const [description, setDescription] = useState('');
-    const {addLog} = useLogs();
+    const {addLog, updateLog} = useLogs();
     const {resetOnboarding} = useOnboarding();
 
     const handleCaptured = useCallback((uri: string) => {
@@ -34,62 +30,32 @@ export default function NewLogScreen() {
         setStep('capture');
     }, []);
 
-    const handleSubmit = useCallback(async () => {
+    const handleSubmit = useCallback(() => {
         if (!capturedUri) return;
-        setStep('processing');
 
-        const result = await estimateFoodVolume(capturedUri, description);
-
-        if (result.success) {
-            const nutrients = result.data.diagnostics.total_nutrients;
-            const id = generateId();
-            addLog({
-                id,
-                description,
-                createdAt: new Date().toISOString(),
-                imageUri: capturedUri,
-                status: 'success',
-                kcal: kcalFromEnergyKj(nutrients?.energy_kj),
-                nutrients: nutrients ?? null,
-                total_mass_g: result.data.mass_g,
-                confidence: result.data.confidence,
-                items_with_nutrients: result.data.diagnostics.items_with_nutrients,
-                items: result.data.diagnostics.items
-            });
-            router.replace(`/log/${id}`);
-            return;
-        }
-
+        const id = generateId();
         addLog({
-            id: generateId(),
+            id,
             description,
             createdAt: new Date().toISOString(),
             imageUri: capturedUri,
-            status: 'failed',
+            status: 'processing',
             kcal: null,
             nutrients: null,
             total_mass_g: null,
             confidence: null,
             items_with_nutrients: null,
-            items: null
+            items: null,
+            failureKind: null,
         });
 
-        const {title, message} = estimateFailureAlert(result.kind);
-        if (result.kind === 'config') {
-            resetOnboarding();
-            Alert.alert(title, message);
-            return;
-        }
+        submitLogEstimate(id, capturedUri, description, updateLog, resetOnboarding);
 
-        Alert.alert(title, message, [{text: 'OK', onPress: () => router.back()}]);
-    }, [addLog, capturedUri, description, resetOnboarding]);
+        router.back();
+    }, [addLog, updateLog, capturedUri, description]);
 
     if (step === 'capture') {
         return <CaptureStep onCancel={() => router.back()} onCaptured={handleCaptured} />;
-    }
-
-    if (step === 'processing') {
-        return <ProcessingStep />;
     }
 
     return (

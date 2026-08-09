@@ -16,7 +16,7 @@ import {submitLogEstimate} from '@/services/logSubmission';
 function failureMessage(kind: Log['failureKind']): string {
     switch (kind) {
         case 'timeout': return "This took too long to process.";
-        case 'network': return "We couldn't reach the server, check your Wi-Fi or cellular connection.";
+        case 'network': return "We couldn't reach the server, check your Wifi or cellular connection.";
         case 'server': return "Something went wrong processing this log.";
         case 'config': return "Your account setup needs a quick check before this can process.";
         default: return "This log failed to process.";

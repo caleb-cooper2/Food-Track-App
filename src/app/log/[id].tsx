@@ -1,5 +1,5 @@
 import {router, useLocalSearchParams} from 'expo-router';
-import {Alert, Pressable, ScrollView, StyleSheet, View} from 'react-native';
+import {ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {LogPhoto} from '@/components/log-detail/log-photo';
@@ -11,12 +11,23 @@ import {Spacing} from '@/constants/theme';
 import {useLogs} from '@/hooks/use-logs';
 import {useTheme} from '@/hooks/use-theme';
 import {formatLogTimestamp} from '@/utils/format-log-date';
+import {submitLogEstimate} from '@/services/logSubmission';
+
+function failureMessage(kind: Log['failureKind']): string {
+    switch (kind) {
+        case 'timeout': return "This took too long to process.";
+        case 'network': return "We couldn't reach the server, check your Wi-Fi or cellular connection.";
+        case 'server': return "Something went wrong processing this log.";
+        case 'config': return "Your account setup needs a quick check before this can process.";
+        default: return "This log failed to process.";
+    }
+}
 
 export default function LogDetailScreen() {
     const {id} = useLocalSearchParams<{ id: string }>();
     const theme = useTheme();
     const insets = useSafeAreaInsets();
-    const {logs, removeLog} = useLogs();
+    const {logs, removeLog, updateLog} = useLogs();
 
     const log = logs.find((entry) => entry.id === id);
 
@@ -45,6 +56,12 @@ export default function LogDetailScreen() {
                 }
             }
         ]);
+    };
+
+    const handleRetry = () => {
+        if (log.imageUri === null) return;
+        updateLog(log.id, {status: 'processing'});
+        submitLogEstimate(log.id, log.imageUri, log.description, updateLog);
     };
 
     return (
@@ -81,17 +98,27 @@ export default function LogDetailScreen() {
                     </ThemedText>
                 )}
 
-                {log.status !== 'success' ? ( // Failed to process entirely
+                {log.status === 'processing' ? (
+                    <View style={styles.noMatch}>
+                        <ActivityIndicator />
+                        <ThemedText themeColor="textSecondary" style={styles.noMatchText}>
+                            Currently working out the nutrition for this log, please wait...
+                        </ThemedText>
+                    </View>
+                ) : log.status === 'failed' ? (
                     <View style={styles.noMatch}>
                         <ThemedText themeColor="textSecondary" style={styles.noMatchText}>
-                            This log failed to process.
+                            {failureMessage(log.failureKind)}
                         </ThemedText>
-                        <ThemedText themeColor="textSecondary" style={styles.noMatchText}>
-                            <ThemedText type="default" style={styles.noMatchLink} onPress={() => router.push(`/edit-log/${log.id}`)}>
-                                Edit log
-                            </ThemedText>
-                            {' to resubmit for a new estimate.'}
-                        </ThemedText>
+                        <View style={styles.actionButtons}>
+                            <Pressable 
+                                onPress={handleRetry} 
+                                style={[styles.actionButton, {backgroundColor: theme.backgroundElement}]}
+                                hitSlop={12}
+                            >
+                                <ThemedText style={styles.actionButtonLabel}>Retry</ThemedText>
+                            </Pressable>
+                        </View>
                     </View>
                 ) : nutrients ? ( // Food nutrients found!
                     <View style={styles.nutrients}>
@@ -211,5 +238,24 @@ const styles = StyleSheet.create({
         color: '#C13333',
         fontSize: 17,
         fontWeight: '700'
+    },
+    actionButtons: {
+        gap: Spacing.two,
+        alignItems: 'center'
+    },
+    actionButton: {
+        borderRadius: 8,
+        paddingVertical: Spacing.two,
+        paddingHorizontal: Spacing.three,
+        alignItems: 'center'
+    },
+    actionButtonLabel: {
+        fontSize: 15,
+        fontWeight: '600'
+    },
+    actionButtonLink: {
+        fontSize: 14,
+        fontWeight: '600',
+        textDecorationLine: 'underline'
     }
 });

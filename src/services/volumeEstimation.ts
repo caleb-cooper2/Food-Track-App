@@ -99,7 +99,8 @@ export async function estimateFoodVolume(
     imageUri: string,
     description: string,
     scaleRef: ScaleRef = "size_prior",
-    onStatusUpdate?: (status: JobPollStatus) => void
+    onStatusUpdate?: (status: JobPollStatus) => void,
+    onJobsCreated?: (jobId: string, pollToken: string, deadline: number) => void
 ): Promise<VolumeEstimateResult> {
     const netState = await NetInfo.fetch();
     if (netState.isConnected === false || netState.isInternetReachable === false) {
@@ -114,7 +115,10 @@ export async function estimateFoodVolume(
     const submitResult = await submitJob(imageUri, description, scaleRef, participantCode);
     if (!submitResult.success) return submitResult;
 
-    return pollForResult(submitResult.jobId, submitResult.pollToken, onStatusUpdate);
+    const deadline = Date.now() + POLL_OVERALL_TIMEOUT_MS;
+    onJobsCreated?.(submitResult.jobId, submitResult.pollToken, deadline);
+
+    return pollForResult(submitResult.jobId, submitResult.pollToken, deadline, onStatusUpdate);
 }
 
 type SubmitResult =
@@ -162,9 +166,9 @@ async function submitJob(
 async function pollForResult(
     jobId: string,
     pollToken: string,
+    deadline: number,
     onStatusUpdate?: (status: JobPollStatus) => void
 ): Promise<VolumeEstimateResult> {
-    const deadline = Date.now() + POLL_OVERALL_TIMEOUT_MS;
     let lastReportedStatus: string | null = null;
 
     while (Date.now() < deadline) {
@@ -207,4 +211,13 @@ async function pollForResult(
     }
 
     return { success: false, kind: "timeout", error: `Polling for job ${jobId} timed out after ${POLL_OVERALL_TIMEOUT_MS / 1000}s` };
+}
+
+export async function resumePolling(
+    jobId: string,
+    pollToken: string,
+    deadline: number,
+    onStatusUpdate?: (status: JobPollStatus) => void
+): Promise<VolumeEstimateResult> {
+    return pollForResult(jobId, pollToken, deadline, onStatusUpdate);
 }

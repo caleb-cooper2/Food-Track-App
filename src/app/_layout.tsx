@@ -4,6 +4,7 @@ import {useColorScheme} from 'react-native';
 import {AnimatedSplashOverlay} from '@/components/animated-icon';
 import {LogsProvider} from '@/hooks/use-logs';
 import {OnboardingProvider, useOnboarding} from '@/hooks/use-onboarding';
+import {useResumePendingLogs} from "@/hooks/use-pending-jobs";
 
 export default function RootLayout() {
     const colorScheme = useColorScheme();
@@ -21,6 +22,7 @@ export default function RootLayout() {
 
 function RootNavigator() {
     const { isComplete } = useOnboarding();
+    useResumePendingLogs();
 
     return (
         <Stack screenOptions={{ headerShown: false }}>

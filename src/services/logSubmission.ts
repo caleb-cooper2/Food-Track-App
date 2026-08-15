@@ -1,5 +1,6 @@
 import {estimateFoodVolume, JobPollStatus} from "@/services/volumeEstimation";
-import {kcalFromEnergyKj} from "@/utils/nutrition";
+import {removePendingJob, savePendingJob} from "@/hooks/use-pending-jobs";
+import {applyEstimateResult} from "@/services/applyEstimateResult";
 
 type UpdateLog = (id: string, patch: Partial<Log>) => void;
 
@@ -9,40 +10,51 @@ export function submitLogEstimate(
     description: string,
     updateLog: UpdateLog,
     onConfigError?: () => void
-) {
-    const handleStatusUpdate = (status: JobPollStatus) => {
-        updateLog(id, { status: status });
-    };
+): Promise<void> {
+    let jobCreated = false;
+    let resolved = false;
 
-    estimateFoodVolume(imageUri, description, "size_prior", handleStatusUpdate).then((result) => {
-        if (result.success) {
-            const nutrients = result.data.diagnostics.total_nutrients;
-            updateLog(id, {
-                status: 'success',
-                kcal: kcalFromEnergyKj(nutrients?.energy_kj),
-                nutrients: nutrients ?? null,
-                total_mass_g: result.data.mass_g,
-                confidence: result.data.confidence,
-                items_with_nutrients: result.data.diagnostics.items_with_nutrients,
-                items: result.data.diagnostics.items,
-                failureKind: null
+    const createdPromise = new Promise<void>((resolve) => {
+        const handleStatusUpdate = (status: JobPollStatus) => {
+            updateLog(id, { status: status });
+        };
+
+        const handleJobCreated = async (jobId: string, pollToken: string, deadline: number) => {
+            try {
+                await savePendingJob({ logId: id, jobId, pollToken, deadline });
+                jobCreated = true;
+                if (!resolved) {
+                    resolved = true;
+                    resolve();
+                }
+            } catch (err) {
+                console.warn('[logSubmission] savePendingJob failed', err);
+                if (!resolved) {
+                    resolved = true;
+                    resolve();
+                }
+            }
+        };
+
+        estimateFoodVolume(imageUri, description, "size_prior", handleStatusUpdate, handleJobCreated)
+            .then((result) => {
+                if (!jobCreated && !resolved) {
+                    resolved = true;
+                    resolve();
+                }
+
+                removePendingJob(id);
+                applyEstimateResult(id, result, updateLog, onConfigError);
+            }).catch((err) => {
+                console.warn('[logSubmission] estimateFoodVolume threw', id, err);
+                if (!jobCreated && !resolved) {
+                    resolved = true;
+                    resolve();
+                }
             });
-            return;
-        }
-
-        updateLog(id, {
-            status: 'failed',
-            kcal: null,
-            nutrients: null,
-            total_mass_g: null,
-            confidence: null,
-            items_with_nutrients: null,
-            items: null,
-            failureKind: result.kind
-        });
-
-        if (result.kind === 'config') {
-            onConfigError?.();
-        }
     });
+
+    const timeoutPromise = new Promise<void>((resolve) => setTimeout(resolve, 8000));
+
+    return Promise.race([createdPromise, timeoutPromise]);
 }

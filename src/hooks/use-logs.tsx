@@ -4,6 +4,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {createContext, type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState} from 'react';
 
+import {deleteLogImage, migrateLogImages} from '@/utils/storage-image';
+
 const LOGS_STORAGE_KEY = 'food-logs';
 
 type LogsContextValue = {
@@ -19,9 +21,14 @@ export function LogsProvider({ children }: PropsWithChildren) {
     const [logs, setLogs] = useState<Log[] | null>(null);
 
     useEffect(() => {
-        AsyncStorage.getItem(LOGS_STORAGE_KEY).then((stored) => {
+        AsyncStorage.getItem(LOGS_STORAGE_KEY).then(async (stored) => {
             if (stored) {
-                setLogs(JSON.parse(stored));
+                const parsed = JSON.parse(stored) as Log[];
+                const migrated = await migrateLogImages(parsed);
+                if (JSON.stringify(migrated) !== stored) {
+                    await AsyncStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(migrated));
+                }
+                setLogs(migrated);
             } else {
                 setLogs(new Array<Log>());
             }
@@ -46,6 +53,11 @@ export function LogsProvider({ children }: PropsWithChildren) {
 
     const removeLog = useCallback((id: string) => {
         setLogs((prev) => {
+            const target = (prev ?? []).find((entry) => entry.id === id);
+            if (target?.imageUri) {
+                void deleteLogImage(target.imageUri);
+            }
+
             const next = (prev ?? []).filter((entry) => entry.id !== id);
             AsyncStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(next));
             return next;

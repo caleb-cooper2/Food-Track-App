@@ -5,7 +5,8 @@ import {CaptureStep} from '@/components/new-log/capture-step';
 import {DescribeStep} from '@/components/new-log/describe-step';
 import {useLogs} from '@/hooks/use-logs';
 import {useOnboarding} from '@/hooks/use-onboarding';
-import {submitLogEstimate} from "@/services/logSubmission";
+import {submitLogEstimate} from '@/services/logSubmission';
+import {persistLogImage} from '@/utils/storage-image';
 
 type Step = 'capture' | 'describe' | 'processing';
 
@@ -20,8 +21,9 @@ export default function NewLogScreen() {
     const {addLog, updateLog} = useLogs();
     const {resetOnboarding} = useOnboarding();
 
-    const handleCaptured = useCallback((uri: string) => {
-        setCapturedUri(uri);
+    const handleCaptured = useCallback(async (uri: string) => {
+        const persistedUri = await persistLogImage(uri);
+        setCapturedUri(persistedUri);
         setStep('describe');
     }, []);
 
@@ -30,15 +32,17 @@ export default function NewLogScreen() {
         setStep('capture');
     }, []);
 
-    const handleSubmit = useCallback(() => {
+    const handleSubmit = useCallback(async () => {
         if (!capturedUri) return;
 
         const id = generateId();
+        const persistedUri = await persistLogImage(capturedUri, id);
+
         addLog({
             id,
             description,
             createdAt: new Date().toISOString(),
-            imageUri: capturedUri,
+            imageUri: persistedUri,
             status: 'processing',
             kcal: null,
             nutrients: null,
@@ -49,10 +53,10 @@ export default function NewLogScreen() {
             failureKind: null,
         });
 
-        submitLogEstimate(id, capturedUri, description, updateLog, resetOnboarding);
+        submitLogEstimate(id, persistedUri, description, updateLog, resetOnboarding);
 
         router.back();
-    }, [addLog, updateLog, capturedUri, description]);
+    }, [addLog, capturedUri, description, resetOnboarding, updateLog]);
 
     if (step === 'capture') {
         return <CaptureStep onCancel={() => router.back()} onCaptured={handleCaptured} />;

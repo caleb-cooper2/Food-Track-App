@@ -60,7 +60,7 @@ export default function LogDetailScreen() {
 
     const handleRetry = () => {
         if (log.imageUri === null) return;
-        updateLog(log.id, {status: 'processing'});
+        updateLog(log.id, {status: 'pending'});
         submitLogEstimate(log.id, log.imageUri, log.description, updateLog);
     };
 
@@ -98,11 +98,12 @@ export default function LogDetailScreen() {
                     </ThemedText>
                 )}
 
-                {log.status === 'processing' ? (
+                {log.status === 'processing' || log.status === 'pending' ? (
                     <View style={styles.noMatch}>
                         <ActivityIndicator />
                         <ThemedText themeColor="textSecondary" style={styles.noMatchText}>
-                            Currently working out the nutrition for this log, please wait...
+                            {log.status === 'processing' ? `Currently working out the nutrition for this log, please wait...`
+                                : `This log is waiting to be processed, please check back in a few minutes.`}
                         </ThemedText>
                     </View>
                 ) : log.status === 'failed' ? (

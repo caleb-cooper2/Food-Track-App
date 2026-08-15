@@ -1,4 +1,4 @@
-type LogStatus = 'success' | 'failed' | 'processing';
+type LogStatus = 'success' | 'failed' | 'processing' | 'pending';
 type PossibleConfidence = 'low' | 'medium' | 'high';
 
 interface Log {

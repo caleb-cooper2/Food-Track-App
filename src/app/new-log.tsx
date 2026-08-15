@@ -43,7 +43,7 @@ export default function NewLogScreen() {
             description,
             createdAt: new Date().toISOString(),
             imageUri: persistedUri,
-            status: 'processing',
+            status: 'pending',
             kcal: null,
             nutrients: null,
             total_mass_g: null,

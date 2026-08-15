@@ -1,4 +1,4 @@
-import {estimateFoodVolume} from "@/services/volumeEstimation";
+import {estimateFoodVolume, JobPollStatus} from "@/services/volumeEstimation";
 import {kcalFromEnergyKj} from "@/utils/nutrition";
 
 type UpdateLog = (id: string, patch: Partial<Log>) => void;
@@ -10,7 +10,11 @@ export function submitLogEstimate(
     updateLog: UpdateLog,
     onConfigError?: () => void
 ) {
-    estimateFoodVolume(imageUri, description).then((result) => {
+    const handleStatusUpdate = (status: JobPollStatus) => {
+        updateLog(id, { status: status });
+    };
+
+    estimateFoodVolume(imageUri, description, "size_prior", handleStatusUpdate).then((result) => {
         if (result.success) {
             const nutrients = result.data.diagnostics.total_nutrients;
             updateLog(id, {

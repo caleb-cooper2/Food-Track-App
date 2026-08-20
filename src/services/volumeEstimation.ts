@@ -66,7 +66,7 @@ const pollEndpoint = (jobId: string) => `${process.env.EXPO_PUBLIC_API_URL}/api/
 
 const SUBMIT_TIMEOUT_MS = 30_000;
 const POLL_REQUEST_TIMEOUT_MS = 15_000;
-const POLL_INTERVAL_MS = 2_000;
+const POLL_INTERVAL_MS = 3_000;
 const POLL_OVERALL_TIMEOUT_MS = 120_000;
 
 export type ScaleRef = "utensil" | "size_prior" | "checkerboard" | "auto";

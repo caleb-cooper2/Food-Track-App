@@ -53,7 +53,9 @@
           "cameraPermission": "Volume Estimation uses your camera to capture photos of your meals for logging."
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-font",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true,

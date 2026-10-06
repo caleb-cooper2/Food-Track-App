@@ -2,6 +2,7 @@
   "expo": {
     "name": "Food Track",
     "slug": "volume-estimation",
+    "description": "Capture meal photos and receive volume and nutrition estimates.",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -24,10 +25,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.CAMERA"
       ]
     },
     "web": {
@@ -50,7 +48,8 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Volume Estimation uses your camera to capture photos of your meals for logging."
+          "cameraPermission": "Volume Estimation uses your camera to capture photos of your meals for logging.",
+          "recordAudioAndroid": false
         }
       ],
       "expo-web-browser",

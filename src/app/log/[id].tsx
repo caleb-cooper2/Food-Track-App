@@ -92,7 +92,7 @@ export default function LogDetailScreen() {
                     </ThemedText>
                 </View>
 
-                {log.confidence == "low" && (
+                {log.confidence === "low" && (
                     <ThemedText type="small" style={styles.warningNote}>
                         {`Low confidence - the photo angle made the portion size difficult to estimate`}
                     </ThemedText>
@@ -132,7 +132,7 @@ export default function LogDetailScreen() {
                 ) : ( // No food matches at all, but pipeline still ran fine
                     <View style={styles.noMatch}>
                         <ThemedText themeColor="textSecondary" style={styles.noMatchText}>
-                            We couldn't identify the foods from your description.
+                            {"We couldn't identify the foods from your description."}
                         </ThemedText>
                         <ThemedText themeColor="textSecondary" style={styles.noMatchText}>
                             <ThemedText type="default" style={styles.noMatchLink} onPress={() => router.push(`/edit-log/${log.id}`)}>

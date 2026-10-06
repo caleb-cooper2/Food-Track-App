@@ -3,13 +3,13 @@ import {kcalFromEnergyKj} from "@/utils/nutrition";
 
 type UpdateLog = (id: string, patch: Partial<Log>) => void;
 
+/** Applies a completed volume-estimation result to its corresponding local log */
 export function applyEstimateResult(
     id: string,
     result: VolumeEstimateResult,
     updateLog: UpdateLog,
     onConfigError?: () => void
 ) {
-    console.debug('[applyEstimateResult] applying', { id, result });
     if (result.success) {
         const nutrients = result.data.diagnostics.total_nutrients;
         updateLog(id, {
@@ -25,7 +25,6 @@ export function applyEstimateResult(
         return;
     }
 
-    console.debug('[applyEstimateResult] failed result for', id, result);
     updateLog(id, {
         status: 'failed',
         kcal: null,
@@ -37,7 +36,5 @@ export function applyEstimateResult(
         failureKind: result.kind
     });
 
-    if (result.kind === 'config') {
-        onConfigError?.();
-    }
+    if (result.kind === 'config') onConfigError?.();
 }

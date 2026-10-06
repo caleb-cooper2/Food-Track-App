@@ -18,7 +18,7 @@ async function readAll(): Promise<Record<string, PendingJob>> {
     try {
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
         return raw ? JSON.parse(raw) : {};
-    } catch (err) {
+    } catch {
         return {};
     }
 }

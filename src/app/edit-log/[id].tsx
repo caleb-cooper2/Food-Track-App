@@ -21,8 +21,6 @@ import {useOnboarding} from '@/hooks/use-onboarding';
 import {useTheme} from '@/hooks/use-theme';
 import {submitLogEstimate} from "@/services/logSubmission";
 
-type Step = 'describe' | 'processing';
-
 export default function EditLogScreen() {
     const {id} = useLocalSearchParams<{ id: string }>();
     const theme = useTheme();
@@ -30,15 +28,9 @@ export default function EditLogScreen() {
     const {logs, updateLog} = useLogs();
     const {resetOnboarding} = useOnboarding();
     const scrollRef = useRef<ScrollView>(null);
-    const [step, setStep] = useState<Step>('describe');
-    const [description, setDescription] = useState('');
-
     const log = logs.find((entry) => entry.id === id);
+    const [description, setDescription] = useState(() => log?.description ?? '');
     const canSave = description.trim().length > 0;
-
-    useEffect(() => {
-        if (log) setDescription(log.description);
-    }, [log]);
 
     useEffect(() => {
         const subscription = Keyboard.addListener('keyboardDidShow', () => {

@@ -1,6 +1,6 @@
 # Food Track
 
-A React Native (Expo) app for logging meals by photo. Take a picture of food, add a short description, and receive volume and nutrition estimates from the companion [volume-estimation](https://github.com/caleb-cooper2/volume-estimation) and [unstructured-food-input](https://github.com/caleb-cooper2/unstructured-food-input) APIs.
+A React Native (Expo) app for logging meals by photo. Take a picture of food, add a short description, and receive volume and nutrition estimates from the companion [Food Volume Estimation](https://github.com/caleb-cooper2/Food-Volume-Estimation) and [Food Natural Language Processing](https://github.com/caleb-cooper2/Food-Natural-Language-Processing) APIs.
 
 ## Prerequisites
 - Node.js and npm

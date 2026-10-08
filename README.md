@@ -4,8 +4,8 @@ A React Native (Expo) app for logging meals by photo. Take a picture of food, ad
 
 ## Prerequisites
 - Node.js and npm
-- The `volume-estimation` API running on a machine reachable from the device
-- The `unstructured-food-input` API running on a machine reachable from the device
+- The `Food-Volume-Estimation` API running on a machine reachable from the device
+- The `Food-Natural-Language-Processing` API running on a machine reachable from the device
 - An Android/iOS device or simulator with camera access 
 
 ## Setup
